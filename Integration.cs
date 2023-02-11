@@ -27,7 +27,7 @@ namespace ChatGptIntegration
 {
     public class Integration
     {
-        string OPENAI_API_KEY = "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"; // https://beta.openai.com/account/api-keys
+        string OPENAI_API_KEY = "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"; // https://beta.openai.com/account/api-keys
 
         public async Task CallAPIAsync ( )
         {
@@ -43,62 +43,72 @@ namespace ChatGptIntegration
             //string Query1 =   text + " Can you find errors in given C# code and edit it ?";
             //Console.WriteLine ( Query );
 
-            string Query ="# Can you edit code and write comments in given code ?"
-                +"# Can you find errors in given C# code and edit it ?"
-                +"# Can you write c# unit test cases for given code ? "
-                + text;
+            string Query0 = "# Can you edit code and write comments in given code ?" + text;
+            string Query1 = "# Can you find errors in given C# code and edit it ?" + text;
+            string Query2 = "# Can you write c# unit test cases for given code ? " + text;
 
 
-            CompletionRequest completionRequest = new CompletionRequest
-            {
-                Model = "text-davinci-003",
-                Prompt = Query,
-                MaxTokens = 1000,
-            };
+
+           
 
 
-            try
-            {
-                using ( HttpClient httpClient = new HttpClient () )
+            
+                for (int i = 0; i < 3; i++)
                 {
-                    using ( var httpReq = new HttpRequestMessage ( HttpMethod.Post, "https://api.openai.com/v1/completions" ) )
+            
+                CompletionRequest completionRequest = new CompletionRequest
+                {
+                    Model = "text-davinci-003",
+                    Prompt = "Query"+i,
+                    MaxTokens = 3000,
+                };
+
+
+
+                try
+                {
+                    using (HttpClient httpClient = new HttpClient())
                     {
-                        httpReq.Headers.Add ( "Authorization", $"Bearer {OPENAI_API_KEY}" );
-                        string requestString = JsonSerializer.Serialize(completionRequest);
-                        httpReq.Content = new StringContent ( requestString, Encoding.UTF8, "application/json" );
-                        using ( HttpResponseMessage? httpResponse = await httpClient.SendAsync ( httpReq ) )
+                        using (var httpReq = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/completions"))
                         {
-                            if ( httpResponse is not null )
+                            httpReq.Headers.Add("Authorization", $"Bearer {OPENAI_API_KEY}");
+                            string requestString = JsonSerializer.Serialize(completionRequest);
+                            httpReq.Content = new StringContent(requestString, Encoding.UTF8, "application/json");
+                            using (HttpResponseMessage? httpResponse = await httpClient.SendAsync(httpReq))
                             {
-                                if ( httpResponse.IsSuccessStatusCode )
+                                if (httpResponse is not null)
                                 {
-                                    string responseString = await httpResponse.Content.ReadAsStringAsync();
+                                    if (httpResponse.IsSuccessStatusCode)
                                     {
-                                        if ( !string.IsNullOrWhiteSpace ( responseString ) )
+                                        string responseString = await httpResponse.Content.ReadAsStringAsync();
                                         {
-                                            completionResponse = JsonSerializer.Deserialize<CompletionResponse> ( responseString );
+                                            if (!string.IsNullOrWhiteSpace(responseString))
+                                            {
+                                                completionResponse = JsonSerializer.Deserialize<CompletionResponse>(responseString);
+                                            }
                                         }
                                     }
                                 }
+                                if (completionResponse is not null)
+                                {
+                                    string? completionText = completionResponse.Choices?[0]?.Text;
+                                    Console.WriteLine(completionText);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Something is wrong......");
+                                }
+                                Console.WriteLine("Process completed.");
                             }
-                            if ( completionResponse is not null )
-                            {
-                                string ? completionText = completionResponse.Choices ? [0]?.Text;
-                                Console.WriteLine ( completionText );
-                            }
-                            else
-                            {
-                                Console.WriteLine ( "Something is wrong......" );
-                            }
-                            Console.WriteLine ( "Process completed." );
                         }
                     }
                 }
-            }
-            catch ( Exception ex )
+            catch (Exception ex)
             {
-                Console.WriteLine ( ex.Message );
+                Console.WriteLine(ex.Message);
             }
+        }
+                
 
 
         }
